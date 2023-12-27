@@ -7,7 +7,7 @@ test('test basic', async () => {
     expect(tree.nodeIndex2Height(4)).toBe(0);
 
     const oldRoot = tree.getCurrentRootHash();
-    tree.insertLeaf(0, ZeroHash, "zeroHash");
+    tree.insertLeaf(0, ZeroHash);
     expect(tree.getCurrentRootHash()).toBe(oldRoot);
     expect(tree.leafCount()).toBe(1);
 });
@@ -19,7 +19,7 @@ function getRandomInt(max: number) {
 test('test prove small tree', async () => {
     let tree = new IncMerkleTree(8);
     for (let i = 0; i < 2 ** 7; i++) {
-        tree.insertLeaf(i, sha256(randomBytes(20)), `${i}`);
+        tree.insertLeaf(i, sha256(randomBytes(20)));
         const targetLeafIndex = getRandomInt(i);
         const proveLeafIndex = getRandomInt(targetLeafIndex);
         const proof = tree.getProof(proveLeafIndex, targetLeafIndex);
@@ -30,9 +30,9 @@ test('test prove small tree', async () => {
 
 
 test('test prove large tree', async () => {
-    let tree = new IncMerkleTree(32);
+    let tree = new IncMerkleTree(33);
     for (let i = 0; i < 100000; i++) {
-        tree.insertLeaf(i, sha256(randomBytes(20)), `${i}`);
+        tree.insertLeaf(i, sha256(randomBytes(20)));
         if (i % 100 == 0) {
             const targetLeafIndex = getRandomInt(i);
             const proveLeafIndex = getRandomInt(targetLeafIndex);

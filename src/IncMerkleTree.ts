@@ -19,7 +19,7 @@ function sibling(nodeIndex: number) {
 
 
 export class IncMerkleTree {
-    // the depth of binary tree. max 32.
+    // the depth of binary tree. max 33.
     treeDepth: number;
     // leaf index: 0, 1, 2, ..., 2**(treeDepth-1)-1
     // node index:
@@ -32,8 +32,6 @@ export class IncMerkleTree {
 
     // the current hash of each node
     nodeIndex2Hash: Map<number, string>;
-    // preimage of leaf node
-    leafData: string[];
 
     // index and reverse map for rootHash and leafIndex
     leafIndex2RootHash: Map<number, string>;
@@ -44,12 +42,12 @@ export class IncMerkleTree {
 
     /**
      * Create a new Incremental Merkle Tree
-     * @param treeDepth the depth of the binary tree, max 32
+     * @param treeDepth the depth of the binary tree, max 33
      * @param hashFunction hash function for the merkle tree, sha256 or keccak256
      */
-    constructor(treeDepth: number, hashFunction: string = "sha256") {
-        if (treeDepth < 1 || treeDepth > 32) {
-            throw Error(`invalid treeDepth ${treeDepth}, must be in [1, 32]`);
+    constructor(treeDepth: number, hashFunction: string = "keccak256") {
+        if (treeDepth < 1 || treeDepth > 33) {
+            throw Error(`invalid treeDepth ${treeDepth}, must be in [1, 33]`);
         }
         if (hashFunction === "sha256") {
             this.hashNodes = (a: string, b: string) => {
@@ -68,7 +66,6 @@ export class IncMerkleTree {
         this.leafIndex2RootHash = new Map();
         this.rootHash2LeafIndex = new Map();
         this.nodeIndex2Hash = new Map();
-        this.leafData = new Array();
 
         // initialize zero hashes at each height
         this.zeroHashes[0] = ethers.ZeroHash.toLowerCase();
@@ -97,20 +94,19 @@ export class IncMerkleTree {
         return this.leafIndex2RootHash.get(leafIndex)!;
     }
 
-    public getRootIndex(rootHash: string): number {
+    public getRootIndex(rootHash: string): number | null {
         if (this.rootHash2LeafIndex.has(rootHash)) {
             return this.rootHash2LeafIndex.get(rootHash)!;
         }
-        return -1;
+        return null;
     }
 
-    public getLeaf(leafIndex: number): [string, string] {
+    public getLeafHash(leafIndex: number): string {
         if (leafIndex < 0 || leafIndex >= this.leafCount()) {
             throw Error(`invalid leafIndex`);
         }
         const leafHash = this.getNodeHash(this.leafIndex2NodeIndex(leafIndex));
-        const leafData = this.leafData[leafIndex];
-        return [leafHash, leafData];
+        return leafHash;
     }
 
     // get current node hash
@@ -131,10 +127,9 @@ export class IncMerkleTree {
     /**
      * Insert new leaf into the tree
      * @param leafIndex current leaf index
-     * @param leafData the data of leaf
      * @param leafHash the hash of leaf node
      */
-    public insertLeaf(leafIndex: number, leafHash: string, leafData: string) {
+    public insertLeaf(leafIndex: number, leafHash: string) {
         // 1. check
         if (this.leafCount() === this.maxLeafCount()) {
             throw Error(`this tree is full`);
@@ -159,11 +154,10 @@ export class IncMerkleTree {
         }
         this.leafIndex2RootHash.set(leafIndex, currHash);
         this.rootHash2LeafIndex.set(currHash, leafIndex);
-        this.leafData.push(leafData);
     }
 
     public leafCount() {
-        return this.leafData.length;
+        return this.leafIndex2RootHash.size;
     }
 
     public maxLeafCount() {
