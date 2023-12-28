@@ -47,6 +47,10 @@ export class KeyStoreIncMerkleTree {
         return this.rootHash2BlockNumber.get(rootHash);
     }
 
+    getRootIndex(rootHash: string): number | null {
+        return this.tree.getRootIndex(rootHash);
+    }
+
     getSlotLatestLeafIndexUnderRoot(slot: string, rootHash: string): number | undefined {
         const nodeIndex = this.tree.getRootIndex(rootHash);
         if (nodeIndex === null) {
